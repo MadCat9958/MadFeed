@@ -41,7 +41,7 @@ async def resend_message(message: types.Message):
     owner_id = int(os.getenv("BOT_OWNER_ID"))
     msg = await message.forward(owner_id,)
     cur.execute(
-        """INSERT INTO messages (msg_id, sender_id, original_message_id) VALUES (%s, %s, %s)""",
+        """INSERT INTO messages (msg_id, sender_id, original_message_id) VALUES (?, ?, ?)""",
         (msg.message_id, msg.from_user.id, message.message_id)
     )
     await msg.reply(f"Отправитель: {message.from_user.full_name} (ID: {message.from_user.id})")
@@ -51,7 +51,7 @@ async def resend_message(message: types.Message):
 async def answer_message(message: types.Message):
     if message.reply_to_message is None:
         return await message.reply("Невозможно ответить на данное сообщение: это не предложка.")
-    cur.execute("SELECT * FROM messages WHERE msg_id = %s", (message.reply_to_message.message_id,))
+    cur.execute("SELECT * FROM messages WHERE msg_id = ?", (message.reply_to_message.message_id,))
     msg = cur.fetchone()
     if msg is None:
         return await message.reply("Невозможно ответить на данное сообщение: нет информации об предложившем пользователе.")
