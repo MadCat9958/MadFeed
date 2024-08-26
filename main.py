@@ -43,7 +43,7 @@ async def resend_message(message: types.Message):
     msg = await message.forward(owner_id,)
     cur.execute(
         """INSERT INTO messages (msg_id, sender_id, original_message_id) VALUES (?, ?, ?)""",
-        (msg.message_id, msg.from_user.id, message.message_id)
+        (msg.message_id, message.from_user.id, message.message_id)
     )
     await msg.reply(f"Отправитель: {message.from_user.full_name} (ID: {message.from_user.id})")
     await message.reply("Переслано!")
