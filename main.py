@@ -4,6 +4,7 @@ import sys
 import asyncio
 import logging
 import sqlite3
+import traceback
 
 from dotenv import load_dotenv
 from aiogram import filters, F
@@ -36,7 +37,7 @@ async def command_start_handler(message: types.Message):
         "А пока что, задонать плиз: @MadDonate_bot :)"
     )
 
-@dp.message(F.from_user.id != int(os.getenv("BOT_OWNER_ID")) & F.from_user.id == F.chat.id)
+@dp.message(F.from_user.id != int(os.getenv("BOT_OWNER_ID")), F.from_user.id == F.chat.id)
 async def resend_message(message: types.Message):
     owner_id = int(os.getenv("BOT_OWNER_ID"))
     msg = await message.forward(owner_id,)
@@ -47,7 +48,7 @@ async def resend_message(message: types.Message):
     await msg.reply(f"Отправитель: {message.from_user.full_name} (ID: {message.from_user.id})")
     await message.reply("Переслано!")
 
-@dp.message(F.from_user.id == int(os.getenv("BOT_OWNER_ID")) & F.from_user.id == F.chat.id)
+@dp.message(F.from_user.id == int(os.getenv("BOT_OWNER_ID")), F.from_user.id == F.chat.id)
 async def answer_message(message: types.Message):
     if message.reply_to_message is None:
         return await message.reply("Невозможно ответить на данное сообщение: это не предложка.")
@@ -56,9 +57,10 @@ async def answer_message(message: types.Message):
     if msg is None:
         return await message.reply("Невозможно ответить на данное сообщение: нет информации об предложившем пользователе.")
     try:
-        await message.copy_to(msg["sender_id"], reply_to_message_id=msg["original_message_id"])
+        await message.copy_to(msg["sender_id"])
     except:
         await message.reply("Ответ не был отправлен! Возможно, пользователь заблокировал бота либо он больше не существует.")
+        traceback.print_exc()
     else:
         await message.reply("Ответ отправлен!")
 
