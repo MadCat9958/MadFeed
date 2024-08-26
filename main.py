@@ -37,6 +37,11 @@ async def command_start_handler(message: types.Message):
         "А пока что, задонать плиз: @MadDonate_bot :)"
     )
 
+@dp.message(filters.Command("cleardb"), F.from_user.id == int(os.getenv("BOT_OWNER_ID")))
+async def clear_db(message: types.Message):
+    cur.execute("DELETE FROM messages")
+    await message.reply("База данных почищена!")
+
 @dp.message(F.from_user.id != int(os.getenv("BOT_OWNER_ID")), F.from_user.id == F.chat.id)
 async def resend_message(message: types.Message):
     owner_id = int(os.getenv("BOT_OWNER_ID"))
@@ -63,11 +68,6 @@ async def answer_message(message: types.Message):
         traceback.print_exc()
     else:
         await message.reply("Ответ отправлен!")
-
-@dp.message(filters.Command("cleardb"), F.from_user.id == int(os.getenv("BOT_OWNER_ID")))
-async def clear_db(message: types.Message):
-    cur.execute("DELETE FROM messages")
-    await message.reply("База данных почищена!")
 
 async def main():
     await dp.start_polling(bot)
