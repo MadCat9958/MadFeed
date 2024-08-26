@@ -64,6 +64,11 @@ async def answer_message(message: types.Message):
     else:
         await message.reply("Ответ отправлен!")
 
+@dp.message(filters.Command("cleardb"), F.from_user.id == int(os.getenv("BOT_OWNER_ID")))
+async def clear_db(message: types.Message):
+    cur.execute("DELETE FROM messages")
+    await message.reply("База данных почищена!")
+
 async def main():
     await dp.start_polling(bot)
 
