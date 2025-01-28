@@ -21,7 +21,8 @@ cur = db.cursor()
 
 locales = {}
 for locale in os.scandir("./locales"):
-    if not locale.name.endswith(".json") or not locale.is_file(): continue
+    if not locale.name.endswith(".json") or not locale.is_file(): 
+        continue
     locales[locale.name[:-5]] = json.load(open(locale.path))
 
 cur.execute(
@@ -65,7 +66,7 @@ async def answer_message(message: types.Message):
         return await message.reply(locales.get(message.from_user.language_code, locales["default"])["errors"]["suggestor_not_found"])
     try:
         await message.copy_to(msg["sender_id"])
-    except:
+    except Exception:
         await message.reply(locales.get(message.from_user.language_code, locales["default"])["errors"]["reply_failed"])
         traceback.print_exc()
     else:
