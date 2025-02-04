@@ -1,3 +1,2 @@
 aiogram
 python-dotenv
-SQLAlchemy
