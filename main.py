@@ -79,11 +79,13 @@ async def ban_user(message: types.Message):
                 "too_many_arguments"
             ]
         )
-    cur.execute(
-        "SELECT * FROM messages WHERE msg_id = ?",
-        (message.reply_to_message.message_id,),
-    )
-    msg = cur.fetchone()
+    msg = None
+    if message.reply_to_message is not None:
+        cur.execute(
+            "SELECT * FROM messages WHERE msg_id = ?",
+            (message.reply_to_message.message_id,),
+        )
+        msg = cur.fetchone()
     if (len(args) > 0 and not args[0].isdigit()) or msg is None:
         return await message.reply(
             locales.get(message.from_user.language_code, locales["default"])["errors"][
@@ -129,11 +131,13 @@ async def unban_user(message: types.Message):
                 "too_many_arguments"
             ]
         )
-    cur.execute(
-        "SELECT * FROM messages WHERE msg_id = ?",
-        (message.reply_to_message.message_id,),
-    )
-    msg = cur.fetchone()
+    msg = None
+    if message.reply_to_message is not None:
+        cur.execute(
+            "SELECT * FROM messages WHERE msg_id = ?",
+            (message.reply_to_message.message_id,),
+        )
+        msg = cur.fetchone()
     if (len(args) > 0 and not args[0].isdigit()) or msg is None:
         return await message.reply(
             locales.get(message.from_user.language_code, locales["default"])["errors"][
