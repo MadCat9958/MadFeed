@@ -86,7 +86,7 @@ async def ban_user(message: types.Message):
             (message.reply_to_message.message_id,),
         )
         msg = cur.fetchone()
-    if (len(args) > 0 and not args[0].isdigit()) or msg is None:
+    if (len(args) > 0 and not args[0].isdigit()) or (message.reply_to_message is not None and msg is None):
         return await message.reply(
             locales.get(message.from_user.language_code, locales["default"])["errors"][
                 "invalid_arguments"
@@ -138,7 +138,7 @@ async def unban_user(message: types.Message):
             (message.reply_to_message.message_id,),
         )
         msg = cur.fetchone()
-    if (len(args) > 0 and not args[0].isdigit()) or msg is None:
+    if (len(args) > 0 and not args[0].isdigit()) or (message.reply_to_message is not None and msg is None):
         return await message.reply(
             locales.get(message.from_user.language_code, locales["default"])["errors"][
                 "invalid_arguments"
