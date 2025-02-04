@@ -59,6 +59,109 @@ async def command_start_handler(message: types.Message):
     )
 
 
+def check_banned(user_id: int):
+    user = cur.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)).fetchone()
+    return user is not None and user["is_banned"]
+
+
+@dp.message(F.from_user.id == int(os.getenv("BOT_OWNER_ID")), F.from_user.id == F.chat.id, filters.Command("ban"))
+async def ban_user(message: types.Message):
+    args = message.text.split()[1:]
+    if len(args) == 0 and message.reply_to_message is None:
+        return await message.reply(
+            locales.get(message.from_user.language_code, locales["default"])["errors"][
+                "not_enough_arguments"
+            ]
+        )
+    if len(args) > 0 and message.reply_to_message is not None:
+        return await message.reply(
+            locales.get(message.from_user.language_code, locales["default"])["errors"][
+                "too_many_arguments"
+            ]
+        )
+    cur.execute(
+        "SELECT * FROM messages WHERE msg_id = ?",
+        (message.reply_to_message.message_id,),
+    )
+    msg = cur.fetchone()
+    if (len(args) > 0 and not args[0].isdigit()) or msg is None:
+        return await message.reply(
+            locales.get(message.from_user.language_code, locales["default"])["errors"][
+                "invalid_arguments"
+            ]
+        )
+    user_id = int(args[0]) if len(args) > 0 else msg["sender_id"]
+    cur.execute(
+        "SELECT * FROM users WHERE user_id = ?",
+        (user_id,)
+    )
+    usr_db = cur.fetchone()
+    if usr_db is None:
+        cur.execute("INSERT INTO users (user_id, is_banned) VALUES (?, ?)", (user_id, True))
+    elif usr_db["is_banned"]:
+        return await message.reply(
+            locales.get(message.from_user.language_code, locales["default"])["errors"][
+                "already_banned"
+            ]
+        )
+    else:
+        cur.execute("UPDATE users SET is_banned = ? WHERE user_id = ?", (True, user_id))
+    
+    await message.reply(
+        locales.get(message.from_user.language_code, locales["default"])["success"][
+            "user_banned"
+        ]
+    )
+
+
+@dp.message(F.from_user.id == int(os.getenv("BOT_OWNER_ID")), F.from_user.id == F.chat.id, filters.Command("unban"))
+async def unban_user(message: types.Message):
+    args = message.text.split()[1:]
+    if len(args) == 0 and message.reply_to_message is None:
+        return await message.reply(
+            locales.get(message.from_user.language_code, locales["default"])["errors"][
+                "not_enough_arguments"
+            ]
+        )
+    if len(args) > 0 and message.reply_to_message is not None:
+        return await message.reply(
+            locales.get(message.from_user.language_code, locales["default"])["errors"][
+                "too_many_arguments"
+            ]
+        )
+    cur.execute(
+        "SELECT * FROM messages WHERE msg_id = ?",
+        (message.reply_to_message.message_id,),
+    )
+    msg = cur.fetchone()
+    if (len(args) > 0 and not args[0].isdigit()) or msg is None:
+        return await message.reply(
+            locales.get(message.from_user.language_code, locales["default"])["errors"][
+                "invalid_arguments"
+            ]
+        )
+    user_id = int(args[0]) if len(args) > 0 else msg["sender_id"]
+    cur.execute(
+        "SELECT * FROM users WHERE user_id = ?",
+        (user_id,)
+    )
+    usr_db = cur.fetchone()
+    if usr_db is None or not usr_db["is_banned"]:
+        return await message.reply(
+            locales.get(message.from_user.language_code, locales["default"])["errors"][
+                "already_unbanned"
+            ]
+        )
+    else:
+        cur.execute("UPDATE users SET is_banned = ? WHERE user_id = ?", (False, user_id))
+    
+    await message.reply(
+        locales.get(message.from_user.language_code, locales["default"])["success"][
+            "user_unbanned"
+        ]
+    )
+
+
 @dp.message(
     filters.Command("cleardb"), F.from_user.id == int(os.getenv("BOT_OWNER_ID"))
 )
@@ -75,6 +178,12 @@ async def clear_db(message: types.Message):
     F.from_user.id != int(os.getenv("BOT_OWNER_ID")), F.from_user.id == F.chat.id
 )
 async def resend_message(message: types.Message):
+    if check_banned(message.from_user.id):
+        return await message.reply(
+            locales.get(message.from_user.language_code, locales["default"])["errors"][
+                "banned"
+            ]
+        )
     owner_id = int(os.getenv("BOT_OWNER_ID"))
     if message.media_group_id is None:
         msg = await message.forward(owner_id)
